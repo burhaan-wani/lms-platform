@@ -1,0 +1,9 @@
+{
+  "extends": "@tsconfig/node26/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true
+  },
+  "exclude": ["node_modules/"]
+}
