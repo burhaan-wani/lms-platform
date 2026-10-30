@@ -3,11 +3,13 @@ import cookieParser from "cookie-parser";
 import cors, { CorsOptions } from "cors";
 import helmet from "helmet";
 import { errorHandler } from "./middlewares/error.middleware.js";
+import { env } from "./config/env.config.js";
+import authRoutes from "./routes/auth.route.js";
 
 export const app = express();
 
 const options: CorsOptions = {
-  origin: process.env.ORIGIN_URL,
+  origin: env.ORIGIN_URL,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 };
@@ -24,6 +26,9 @@ app.get("/health-check", (req, res) => {
     message: "Server up and running",
   });
 });
+
+// routes
+app.use("/api/v1/auth", authRoutes);
 
 // Endpoint for unknown routes
 app.use("/", (req, res) => {

@@ -2,8 +2,8 @@ import mongoose, { Schema, Types, Model } from "mongoose";
 import bcrypt from "bcryptjs";
 
 interface Avatar {
-  url: string;
-  public_id: string;
+  url: string | null;
+  public_id: string | null;
 }
 
 export interface IUser {
@@ -13,16 +13,17 @@ export interface IUser {
   password: string;
   avatar: Avatar | null;
   isVerified: boolean;
-  courses: Array<{ courseId: Types.ObjectId }>;
+  // courses: Array<{ courseId: Types.ObjectId }>;
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface UserMethods {
+interface IUserMethods {
   comparePasswords: (password: string) => Promise<boolean>;
 }
 
-const userSchema = new Schema<IUser, Model<IUser>, UserMethods>(
+type UserModel = Model<IUser, {}, IUserMethods>;
+const userSchema = new Schema<IUser, UserModel, IUserMethods>(
   {
     name: {
       type: String,
@@ -49,19 +50,19 @@ const userSchema = new Schema<IUser, Model<IUser>, UserMethods>(
     avatar: {
       url: {
         type: String,
-        required: [true, "Avatar url is required"],
+        default: null,
       },
       public_id: {
         type: String,
-        required: [true, "Avatar must have a public_id"],
+        default: null,
       },
     },
-    courses: [
-      {
-        courseId: Schema.Types.ObjectId,
-        ref: "Course",
-      },
-    ],
+    // courses: [
+    //   {
+    //     courseId: Schema.Types.ObjectId,
+    //     ref: "Course",
+    //   },
+    // ],
   },
   {
     timestamps: true,
@@ -82,6 +83,6 @@ userSchema.methods.comparePasswords = async function (password: string) {
   return await bcrypt.compare(password, this.password);
 };
 
-const User = mongoose.model<IUser>("User", userSchema);
+const User = mongoose.model<IUser, UserModel>("User", userSchema);
 
 export default User;

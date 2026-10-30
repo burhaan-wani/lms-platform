@@ -2,6 +2,7 @@ import type { Response, ErrorRequestHandler } from "express";
 
 import { AppError } from "../utils/AppError.js";
 import { MongooseError } from "mongoose";
+import { env } from "../config/env.config.js";
 
 const handleDevError = (error: AppError, res: Response) => {
   res.status(error.statusCode).json({
@@ -73,10 +74,10 @@ export const errorHandler: ErrorRequestHandler = (
       ? "CastError"
       : error.name;
 
-  if (process.env.NODE_ENV === "development") {
+  if (env.NODE_ENV === "development") {
     handleDevError(error, res);
     return;
-  } else if (process.env.NODE_ENV === "production") {
+  } else if (env.NODE_ENV === "production") {
     if (error.code === 11000) err = handleDuplicateError(error);
     if (error.name === "CastError") err = handleCastError(error);
     if (error.name === "JsonWebTokenError") err = handleInvalidJwtError();
