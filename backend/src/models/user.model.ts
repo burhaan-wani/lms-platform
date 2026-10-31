@@ -13,6 +13,8 @@ export interface IUser {
   password: string;
   avatar: Avatar | null;
   isVerified: boolean;
+  verificationCode: number | null;
+  verifyCodeExpiration: Date | null;
   // courses: Array<{ courseId: Types.ObjectId }>;
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +48,14 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    verificationCode: {
+      type: Number,
+      default: null,
+    },
+    verifyCodeExpiration: {
+      type: Date,
+      default: null,
     },
     avatar: {
       url: {

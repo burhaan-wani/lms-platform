@@ -10,7 +10,9 @@ export const registerService = async (input: RegisterInput) => {
       throw new AppError("User with this email already exists", 400);
     }
 
-    await createUser(input);
+    const data = await createUser(input);
+
+    return data;
   } catch (error) {
     throw error;
   }

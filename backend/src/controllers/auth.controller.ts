@@ -6,6 +6,7 @@ import { registerSchema } from "../validators/auth.schema.js";
 import { registerService } from "../services/auth.service.js";
 import { generateRandomNumber } from "../utils/math.js";
 import { sendEmail, verifyMailTemplate } from "../config/email.config.js";
+import { env } from "../config/env.config.js";
 
 export const register = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -14,14 +15,13 @@ export const register = catchAsync(
       return next(new ValidationError(parsedResult.error));
     }
     const { email } = parsedResult.data;
-    await registerService(parsedResult.data);
+    const { user, activationCode } = await registerService(parsedResult.data);
 
-    const activationCode = generateRandomNumber(9000, 9999, true);
-
+    const verificationUrl = `${env.ORIGIN_URL}/verify/${user?._id}`;
     await sendEmail({
       to: email,
       subject: "Email Verification",
-      html: verifyMailTemplate(activationCode),
+      html: verifyMailTemplate(activationCode, verificationUrl),
     });
 
     res.status(201).json({
