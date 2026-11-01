@@ -10,7 +10,7 @@ export interface IUser {
   _id: Types.ObjectId;
   name: string;
   email: string;
-  password: string;
+  password: string | null;
   avatar: Avatar | null;
   isVerified: boolean;
   verificationCode: number | null;
@@ -83,14 +83,14 @@ userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   try {
     const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    this.password = await bcrypt.hash(this.password as string, salt);
   } catch (error) {
     throw error;
   }
 });
 
 userSchema.methods.comparePasswords = async function (password: string) {
-  return await bcrypt.compare(password, this.password);
+  return await bcrypt.compare(password, this.password as string);
 };
 
 const User = mongoose.model<IUser, UserModel>("User", userSchema);

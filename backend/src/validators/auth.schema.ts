@@ -7,3 +7,16 @@ export const registerSchema = z.strictObject({
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const activationCodeSchema = z.strictObject({
+  activationCode: z.string().transform((val) => Number(val)),
+});
+
+export type ActivationCodeInput = z.infer<typeof activationCodeSchema>;
+
+export const loginSchema = z.strictObject({
+  email: z.string().pipe(z.email().lowercase()),
+  password: z.string(),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;

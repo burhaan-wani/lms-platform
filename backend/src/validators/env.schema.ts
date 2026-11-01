@@ -18,4 +18,6 @@ export const envSchema = z.object({
   MAILTRAP_HOST: z.string(),
   MAILTRAP_USER: z.string(),
   MAILTRAP_PASS: z.string(),
+  ACCESS_TOKEN: z.string(),
+  REFRESH_TOKEN: z.string(),
 });
