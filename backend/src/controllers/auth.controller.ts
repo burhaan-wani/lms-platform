@@ -16,7 +16,7 @@ import { generateRandomNumber } from "../utils/math.js";
 import { sendEmail, verifyMailTemplate } from "../config/email.config.js";
 import { env } from "../config/env.config.js";
 import { Types } from "mongoose";
-import { setCookies } from "../utils/set-cookies.js";
+import { clearCookies, setCookies } from "../utils/set-cookies.js";
 
 // Register User
 export const register = catchAsync(
@@ -85,6 +85,17 @@ export const login = catchAsync(
     res.status(200).json({
       status: "success",
       message: "login successful",
+    });
+  },
+);
+
+export const logout = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    clearCookies(res);
+
+    res.status(200).json({
+      status: "success",
+      message: "Logout successful",
     });
   },
 );

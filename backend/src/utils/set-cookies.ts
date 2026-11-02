@@ -21,3 +21,12 @@ export const setCookies = (
     maxAge: 7 * 24 * 3600 * 1000,
   });
 };
+
+export const clearCookies = (res: Response) => {
+  res.clearCookie("accessToken", {
+    ...options,
+  });
+  res.clearCookie("refreshToken", {
+    ...options,
+  });
+};
