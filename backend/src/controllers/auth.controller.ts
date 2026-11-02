@@ -17,6 +17,7 @@ import { sendEmail, verifyMailTemplate } from "../config/email.config.js";
 import { env } from "../config/env.config.js";
 import { Types } from "mongoose";
 import { clearCookies, setCookies } from "../utils/set-cookies.js";
+import { redisClient } from "../config/redis.config.js";
 
 // Register User
 export const register = catchAsync(
@@ -92,6 +93,7 @@ export const login = catchAsync(
 export const logout = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     clearCookies(res);
+    await redisClient.del("user");
 
     res.status(200).json({
       status: "success",

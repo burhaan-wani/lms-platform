@@ -12,6 +12,7 @@ export interface IUser {
   email: string;
   password: string | null;
   avatar: Avatar | null;
+  role: "admin" | "user";
   isVerified: boolean;
   verificationCode: number | null;
   verifyCodeExpiration: Date | null;
@@ -44,6 +45,17 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
       type: String,
       required: [true, "Password is required"],
       maxlength: [254, "Password length cannot exceed 254 characters"],
+    },
+    role: {
+      type: String,
+      enum: ["admin", "user"],
+      default: "user",
+      validate: {
+        validator: function (value) {
+          return ["admin", "user"].includes(value);
+        },
+        message: "User can be either admin or user",
+      },
     },
     isVerified: {
       type: Boolean,
