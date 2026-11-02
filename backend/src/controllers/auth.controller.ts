@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 import { catchAsync } from "../utils/CatchAsync.js";
 import { AppError, ValidationError } from "../utils/AppError.js";
@@ -12,12 +13,13 @@ import {
   registerService,
   verifyActivationCode,
 } from "../services/auth.service.js";
-import { generateRandomNumber } from "../utils/math.js";
 import { sendEmail, verifyMailTemplate } from "../config/email.config.js";
 import { env } from "../config/env.config.js";
 import { Types } from "mongoose";
 import { clearCookies, setCookies } from "../utils/set-cookies.js";
 import { redisClient } from "../config/redis.config.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
+import User from "../models/user.model.js";
 
 // Register User
 export const register = catchAsync(
@@ -62,6 +64,7 @@ export const verifyAccount = catchAsync(
   },
 );
 
+// Login
 export const login = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const parsedResult = loginSchema.safeParse(req.body);
@@ -90,6 +93,7 @@ export const login = catchAsync(
   },
 );
 
+// Logout
 export const logout = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     clearCookies(res);
@@ -99,5 +103,44 @@ export const logout = catchAsync(
       status: "success",
       message: "Logout successful",
     });
+  },
+);
+
+// Generate new access and refresh token
+export const getNewAccessToken = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const token = req.cookies.trefreshToken;
+    if (!token) {
+      return next(new AppError("Refresh token not provided", 403));
+    }
+    try {
+      const decoded = jwt.verify(token, env.REFRESH_TOKEN) as JwtPayload;
+      if (!decoded) {
+        return next(new AppError("Invalid refresh token", 403));
+      }
+
+      const user = await User.findById(decoded.userId);
+      if (!user || !user.isVerified) {
+        clearCookies(res);
+        return next(
+          new AppError(
+            "User belonging to this token no longer exists or is unverified.",
+            401,
+          ),
+        );
+      }
+
+      const accessToken = generateAccessToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+
+      setCookies(accessToken, refreshToken, res);
+      res.status(200).json({
+        status: "success",
+        message: "Access token refreshed successfully",
+      });
+    } catch (error) {
+      clearCookies(res);
+      return next(error);
+    }
   },
 );
