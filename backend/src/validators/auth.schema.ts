@@ -20,3 +20,8 @@ export const loginSchema = z.strictObject({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export const updatePasswordSchema = z.strictObject({
+  oldPassword: z.string(),
+  newPassword: z.string().min(7),
+});

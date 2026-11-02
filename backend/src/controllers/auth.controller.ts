@@ -7,6 +7,7 @@ import {
   activationCodeSchema,
   loginSchema,
   registerSchema,
+  updatePasswordSchema,
 } from "../validators/auth.schema.js";
 import {
   loginService,
@@ -20,6 +21,10 @@ import { clearCookies, setCookies } from "../utils/set-cookies.js";
 import { redisClient } from "../config/redis.config.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import User from "../models/user.model.js";
+import {
+  deleteFromCloudinary,
+  uploadBufferToCloudinary,
+} from "../utils/uploadToCloudinary.js";
 
 // Register User
 export const register = catchAsync(
@@ -140,7 +145,82 @@ export const getNewAccessToken = catchAsync(
       });
     } catch (error) {
       clearCookies(res);
+      await redisClient.del("user");
       return next(error);
     }
+  },
+);
+
+export const getMyProfile = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
+    user.password = null;
+    res.status(200).json({
+      status: "success",
+      user,
+    });
+  },
+);
+
+export const updatePassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const parsedResult = updatePasswordSchema.safeParse(req.body);
+    if (!parsedResult.success) {
+      return next(new ValidationError(parsedResult.error));
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
+    user.password = parsedResult.data.newPassword;
+    await user.save();
+
+    res.status(201).json({
+      status: "success",
+      message: "password update successful",
+    });
+  },
+);
+
+export const uploadAvatar = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const file = req.file?.buffer;
+    if (!file) {
+      return next(new AppError("Please upload an avatar", 400));
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
+    if (user.avatar?.public_id) {
+      await deleteFromCloudinary(user.avatar.public_id);
+    }
+
+    const response = await uploadBufferToCloudinary(file);
+
+    user.avatar = {
+      url: response.secure_url,
+      public_id: response.public_id,
+    };
+
+    await user.save();
+
+    const { password: _password, ...userObject } = user.toObject();
+
+    res.status(200).json({
+      status: "success",
+      message: "User avatar updated successfully",
+      user: userObject,
+    });
   },
 );
