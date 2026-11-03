@@ -114,7 +114,7 @@ export const logout = catchAsync(
 // Generate new access and refresh token
 export const getNewAccessToken = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies.trefreshToken;
+    const token = req.cookies.refreshToken;
     if (!token) {
       return next(new AppError("Refresh token not provided", 403));
     }
@@ -154,7 +154,6 @@ export const getNewAccessToken = catchAsync(
 export const getMyProfile = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user.id;
-
     const user = await User.findById(userId);
     if (!user) {
       return next(new AppError("User not found", 404));
